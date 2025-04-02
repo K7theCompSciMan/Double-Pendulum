@@ -13,6 +13,8 @@ bottom_lower = np.array([140, 100, 100])  # HSV lower bounds for green
 bottom_upper = np.array([180, 255, 255])  # HSV upper bounds for green
 fade_factor = 0.9  # How quickly points fade (smaller = faster fade)
 
+plot_fade_mode = False
+
 # Initialize the camera
 cap = cv2.VideoCapture(0)  # Use 0 for default camera, change if needed
 
@@ -54,8 +56,8 @@ def update_plot():
         colors.append((0, 1, 0, i))  # RGBA red with varying alpha
     
     plt.clf()
-    plt.xlim(0, 640)
-    plt.ylim(0, 480)
+    plt.xlim(0, 2000)
+    plt.ylim(0, 1000)
     plt.gca().invert_yaxis()
     
     # Plot points with varying alpha
@@ -71,10 +73,31 @@ def update_plot():
     plt.title("Double Pendulum Path")
     plt.xlabel("X position")
     plt.ylabel("Y position")
-    plt.pause(0.001)
+    plt.pause(0.00000001)
+
 
 while True:
-    # Capture frame-by-frame
+    # quit if 'q' is pressed
+    key = cv2.waitKey(1) & 0xFF
+    if key == ord("m"):  # Press 'm' to toggle fade mode
+        plot_fade_mode = not plot_fade_mode
+        if(plot_fade_mode):
+            fade_factor = 0.9
+        else:
+            fade_factor = 1.0
+        print(f"Plot Fade Mode: {'ON' if plot_fade_mode else 'OFF'}")  # Debugging
+    
+    
+    key = cv2.waitKey(1) & 0xFF
+    if key == ord("c"):  # Press 'c' to clear the screen
+        midpoint_pts.clear()
+        midpoint_intensities.clear()
+        bottom_pts.clear()
+        bottom_intensities.clear()
+    
+    if cv2.waitKey(1) & 0xFF == ord("q"):
+        break
+    # Capture frame-by-frameq
     ret, frame = cap.read()
     if not ret:
         break
@@ -107,6 +130,7 @@ while True:
             midpoint_intensities.appendleft(1.0)  # New point has full intensity
             
             # Reduce intensity of all previous points
+        
     midpoint_intensities = deque([i * fade_factor for i in midpoint_intensities], maxlen=buffer_size)
     
     
